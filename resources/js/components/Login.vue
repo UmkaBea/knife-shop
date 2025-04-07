@@ -21,6 +21,9 @@
 <script>
     import axios from 'axios'
     import {
+        ref
+    } from 'vue'
+    import {
         useRouter
     } from 'vue-router'
 
@@ -28,7 +31,6 @@
         name: 'Login',
         setup() {
             const router = useRouter()
-
             const email = ref('')
             const password = ref('')
             const error = ref(null)
@@ -37,10 +39,16 @@
                 error.value = null
                 try {
                     await axios.get('/sanctum/csrf-cookie')
-                    await axios.post('/login', {
+
+                    const response = await axios.post('/login', {
                         email: email.value,
                         password: password.value
                     })
+
+                    localStorage.setItem('token', response.data.access_token)
+
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`
+
                     router.push('/')
                 } catch (e) {
                     error.value = e.response?.data?.message || 'Ошибка авторизации'

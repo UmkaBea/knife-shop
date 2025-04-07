@@ -2,30 +2,39 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Knife;
 use Illuminate\Http\Request;
+use App\Models\Knife;
 
 class KnifeController extends Controller
 {
     public function index()
     {
-        return response()->json(Knife::all());
+        return Knife::all();
     }
 
-    public function store(Request $request)
+    public function buy(Request $request)
     {
-        $request->validate([
-            'name'        => 'required|string|max:255',
-            'price'       => 'required|numeric|min:0',
-            'image_url'   => 'nullable|string'
-        ]);
+        $user = $request->user();
+        $knife = Knife::findOrFail($request->knife_id);
 
-        $knife = Knife::create([
-            'name'      => $request->name,
-            'price'     => $request->price,
-            'image_url' => $request->image_url
-        ]);
+        if ($user->balance < $knife->price) {
+            return response()->json(['message' => 'Недостаточно средств'], 400);
+        }
 
-        return response()->json($knife, 201);
+        $user->balance -= $knife->price;
+        $user->save();
+
+        $user->inventory()->create([
+            'knife_id' => $knife->id
+        ]);
+        
+
+        return response()->json(['message' => 'Покупка успешна']);
+    }
+
+    public function inventory(Request $request)
+    {
+        return $request->user()->inventory; 
     }
 }
+

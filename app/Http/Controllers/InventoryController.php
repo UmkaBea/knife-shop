@@ -15,10 +15,11 @@ class InventoryController extends Controller
                 'id'    => $item->knife->id,
                 'name'  => $item->knife->name,
                 'price' => $item->knife->price,
-                'image' => $item->knife->image_url,
+                'image' => $item->knife->image,
             ];
         });
 
         return response()->json($knives);
-    }
+}
+
 }
